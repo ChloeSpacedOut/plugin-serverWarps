@@ -1,6 +1,7 @@
 package com.choespacedout.serverWarps.commands;
 
 import com.choespacedout.serverWarps.Core;
+import com.choespacedout.serverWarps.WarpCache;
 import com.choespacedout.serverWarps.arguments.WarpArgument;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -11,7 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class WarpManage {
-    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance) {
+    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance, WarpCache warpCache) {
         return Commands.literal(commandName)
                 .requires(sender -> sender.getExecutor() instanceof Player && sender.getSender().hasPermission("warps.mannage"))
                 .then(Commands.literal("add")
@@ -31,18 +32,21 @@ public class WarpManage {
 
                                     pluginInstance.saveConfig();
 
+                                    warpCache.updateCache(pluginInstance.getConfig());
+
                                     commandSender.sendRichMessage("<gray>Created new warp called \"" + warpName + "\" at your position!");
                                     return Command.SINGLE_SUCCESS;
                                 })))
                 .then(Commands.literal("remove")
-                        .then(Commands.argument("name",new WarpArgument(pluginInstance.getConfig()))
+                        .then(Commands.argument("name",new WarpArgument(warpCache))
                                 .executes(ctx -> {
                                     final String warpName = StringArgumentType.getString(ctx,"name");
                                     final Player commandSender = (Player) ctx.getSource().getSender();
 
                                     pluginInstance.getConfig().set("Warps." + warpName,null);
-
                                     pluginInstance.saveConfig();
+
+                                    warpCache.updateCache(pluginInstance.getConfig());
 
                                     commandSender.sendRichMessage("<gray>Removed warp \"" + warpName + "\"");
 

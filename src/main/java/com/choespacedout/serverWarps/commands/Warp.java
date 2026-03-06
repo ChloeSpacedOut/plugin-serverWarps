@@ -1,6 +1,7 @@
 package com.choespacedout.serverWarps.commands;
 
 import com.choespacedout.serverWarps.Core;
+import com.choespacedout.serverWarps.WarpCache;
 import com.choespacedout.serverWarps.arguments.WarpArgument;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -14,10 +15,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 public class Warp {
-    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance) {
+    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance, WarpCache warpCache) {
         return Commands.literal(commandName)
                 .requires(sender -> sender.getExecutor() instanceof Player && sender.getSender().hasPermission("warps.use"))
-                .then(Commands.argument("name", new WarpArgument(pluginInstance.getConfig()))
+                .then(Commands.argument("name", new WarpArgument(warpCache))
                         .executes(ctx -> {
                             final Player commandSender = (Player) ctx.getSource().getSender();
                             final String warpName = StringArgumentType.getString(ctx,"name");

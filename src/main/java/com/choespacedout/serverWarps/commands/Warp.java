@@ -1,6 +1,5 @@
 package com.choespacedout.serverWarps.commands;
 
-import com.choespacedout.serverWarps.Core;
 import com.choespacedout.serverWarps.WarpCache;
 import com.choespacedout.serverWarps.arguments.WarpArgument;
 import com.mojang.brigadier.Command;
@@ -11,29 +10,33 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.util.Objects;
+
 public class Warp {
-    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance, WarpCache warpCache) {
+    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, File warpFile, WarpCache warpCache) {
         return Commands.literal(commandName)
                 .requires(sender -> sender.getExecutor() instanceof Player && sender.getSender().hasPermission("warps.use"))
                 .then(Commands.argument("name", new WarpArgument(warpCache))
                         .executes(ctx -> {
                             final Player commandSender = (Player) ctx.getSource().getSender();
                             final String warpName = StringArgumentType.getString(ctx,"name");
-                            final FileConfiguration config = pluginInstance.getConfig();
+
+                            final YamlConfiguration modifyFile = YamlConfiguration.loadConfiguration(warpFile);
 
                             try {
-                                Double pitch = config.getDouble("Warps." + warpName + ".rotation.pitch");
-                                Double yaw = config.getDouble("Warps." + warpName + ".rotation.yaw");
+                                double pitch = modifyFile.getDouble(warpName + ".rotation.pitch");
+                                double yaw = modifyFile.getDouble(warpName + ".rotation.yaw");
                                 Location warpLocation = new Location(
-                                        Bukkit.getWorld(config.getString("Warps." + warpName + ".world")),
-                                        config.getDouble("Warps." + warpName + ".position.x"),
-                                        config.getDouble("Warps." + warpName + ".position.y"),
-                                        config.getDouble("Warps." + warpName + ".position.z"),
-                                        yaw.floatValue(),
-                                        pitch.floatValue()
+                                        Bukkit.getWorld(Objects.requireNonNull(modifyFile.getString(warpName + ".world"))),
+                                        modifyFile.getDouble(warpName + ".position.x"),
+                                        modifyFile.getDouble(warpName + ".position.y"),
+                                        modifyFile.getDouble(warpName + ".position.z"),
+                                        (float) yaw,
+                                        (float) pitch
                                 );
 
                                 commandSender.teleport(warpLocation);

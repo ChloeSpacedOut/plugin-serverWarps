@@ -1,5 +1,5 @@
-name: serverWarps
-version: '1.1'
+name: ServerWarps
+version: '1.2'
 main: com.choespacedout.serverWarps.Core
 api-version: '1.21'
 authors: [ ChloeSpacedOut ]

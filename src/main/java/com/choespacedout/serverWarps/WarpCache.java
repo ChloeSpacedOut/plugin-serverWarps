@@ -1,33 +1,33 @@
 package com.choespacedout.serverWarps;
 
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 public class WarpCache {
 
-    private static Core pluginInstance;
-    private Set<String> warps;
+    private File warpFile;
+    private Set<String> warpCache;
 
-    public WarpCache(Core newPluginInstance) {
-        pluginInstance = newPluginInstance;
+    public WarpCache(File newWarpFile) {
+        warpFile = newWarpFile;
     }
 
     public Set<String> getCache() {
-        return warps;
+        return warpCache;
     }
 
-    public void updateCache(FileConfiguration config) {
+    public void updateCache() {
 
-        final ConfigurationSection configSection = config.getConfigurationSection("Warps");
+        YamlConfiguration modifyFile = YamlConfiguration.loadConfiguration(warpFile);
 
         try {
-            warps = configSection.getKeys(false);
+            warpCache = modifyFile.getKeys(false);
         } catch (Exception e) {
-            warps = new HashSet<>(Arrays.asList());
+            warpCache = new HashSet<>(Arrays.asList());
         }
     }
 

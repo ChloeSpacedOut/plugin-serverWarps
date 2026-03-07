@@ -1,6 +1,5 @@
 package com.choespacedout.serverWarps.commands;
 
-import com.choespacedout.serverWarps.Core;
 import com.choespacedout.serverWarps.WarpCache;
 import com.choespacedout.serverWarps.arguments.WarpArgument;
 import com.mojang.brigadier.Command;
@@ -9,10 +8,15 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+
 public class WarpManage {
-    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, Core pluginInstance, WarpCache warpCache) {
+    public static LiteralCommandNode<CommandSourceStack> createCommand(final String commandName, File warpFile, WarpCache warpCache) {
         return Commands.literal(commandName)
                 .requires(sender -> sender.getExecutor() instanceof Player && sender.getSender().hasPermission("warps.mannage"))
                 .then(Commands.literal("add")
@@ -21,18 +25,32 @@ public class WarpManage {
                                     final String warpName = StringArgumentType.getString(ctx,"name");
                                     final Player commandSender = (Player) ctx.getSource().getSender();
 
+                                    final Set<String> warps = warpCache.getCache();
+
+                                    if (warps.contains(warpName)) {
+                                        commandSender.sendRichMessage("<red>Could not create warp! \"" + warpName + "\" already exists!");
+                                        return Command.SINGLE_SUCCESS;
+                                    }
+
                                     final Location location = commandSender.getLocation();
 
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".world",location.getWorld().getName());
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".position.x",location.getX());
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".position.y",location.getY());
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".position.z",location.getZ());
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".rotation.pitch",location.getPitch());
-                                    pluginInstance.getConfig().set("Warps." + warpName + ".rotation.yaw",location.getYaw());
+                                    YamlConfiguration modifyFile = YamlConfiguration.loadConfiguration(warpFile);
 
-                                    pluginInstance.saveConfig();
+                                    modifyFile.set(warpName + ".world",location.getWorld().getName());
+                                    modifyFile.set(warpName + ".position.x",location.getX());
+                                    modifyFile.set(warpName + ".position.y",location.getY());
+                                    modifyFile.set(warpName + ".position.z",location.getZ());
+                                    modifyFile.set(warpName + ".rotation.pitch",location.getPitch());
+                                    modifyFile.set(warpName + ".rotation.yaw",location.getYaw());
 
-                                    warpCache.updateCache(pluginInstance.getConfig());
+                                    try {
+                                        modifyFile.save(warpFile);
+                                    } catch (IOException e) {
+                                        commandSender.sendRichMessage("<red>Error saving to warp file! Warp could not be created");
+                                        return Command.SINGLE_SUCCESS;
+                                    }
+
+                                    warpCache.updateCache();
 
                                     commandSender.sendRichMessage("<gray>Created new warp called \"" + warpName + "\" at your position!");
                                     return Command.SINGLE_SUCCESS;
@@ -43,10 +61,17 @@ public class WarpManage {
                                     final String warpName = StringArgumentType.getString(ctx,"name");
                                     final Player commandSender = (Player) ctx.getSource().getSender();
 
-                                    pluginInstance.getConfig().set("Warps." + warpName,null);
-                                    pluginInstance.saveConfig();
+                                    YamlConfiguration modifyFile = YamlConfiguration.loadConfiguration(warpFile);
 
-                                    warpCache.updateCache(pluginInstance.getConfig());
+                                    modifyFile.set(warpName,null);
+                                    try {
+                                        modifyFile.save(warpFile);
+                                    } catch (IOException e) {
+                                        commandSender.sendRichMessage("<red>Error saving to warp file! Warp could not be removed!");
+                                        return Command.SINGLE_SUCCESS;
+                                    }
+
+                                    warpCache.updateCache();
 
                                     commandSender.sendRichMessage("<gray>Removed warp \"" + warpName + "\"");
 

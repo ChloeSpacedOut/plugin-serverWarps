@@ -20,13 +20,13 @@ import java.util.concurrent.CompletableFuture;
 @NullMarked
 public class WarpArgument implements CustomArgumentType<String, String> {
 
-    WarpCache warpCache;
+    static WarpCache warpCache;
     public WarpArgument(WarpCache newWarpCache) {
         warpCache = newWarpCache;
     }
 
     private static final DynamicCommandExceptionType ERROR_NO_WARP = new DynamicCommandExceptionType(name -> {
-        return MessageComponentSerializer.message().serialize(Component.text("\"" + name + "\" is not a valid warp!"));
+        return MessageComponentSerializer.message().serialize(Component.text("Valid Warps: " + warpCache.cacheToList()));
     });
 
     @Override

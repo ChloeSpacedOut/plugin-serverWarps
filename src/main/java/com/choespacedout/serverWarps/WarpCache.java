@@ -31,4 +31,8 @@ public class WarpCache {
         }
     }
 
+    public String cacheToList() {
+        return String.join(", ", warpCache);
+    }
+
 }

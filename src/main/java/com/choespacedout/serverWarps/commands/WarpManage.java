@@ -77,6 +77,12 @@ public class WarpManage {
 
                                     return Command.SINGLE_SUCCESS;
                                 })))
+                .then(Commands.literal("list")
+                        .executes(ctx -> {
+                            final Player commandSender = (Player) ctx.getSource().getSender();
+                            commandSender.sendRichMessage("<gray>Valid Warps: " + warpCache.cacheToList());
+                            return Command.SINGLE_SUCCESS;
+                        }))
                 .build();
     }
 }
